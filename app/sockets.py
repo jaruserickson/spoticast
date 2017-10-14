@@ -1,17 +1,24 @@
 ''' sockets file '''
 import socket
 import json
+import sys
 
 class Sock:
     ''' all the socket connection functions '''
-    def __init__(self, host, port):
+    def __init__(self, host, port, parent):
+        self.parent = parent
         self.host = host
         self.port = port
 
     def create_room(self):
         ''' actually send the create room request to the server '''
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect((self.host, self.port))
+        try:
+            sock.connect((self.host, self.port))
+        except ConnectionRefusedError:
+            print('Connection refused. Server must be down.')
+            self.parent.terminate()
+            sys.exit()
 
         sock.send(('/CREATE_ROOM').encode('utf-8'))
         room_key = sock.recv(1024).decode('utf-8')
@@ -22,7 +29,12 @@ class Sock:
     def join_room(self, addr):
         ''' actually send the join room request to the server '''
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect((self.host, self.port))
+        try:
+            sock.connect((self.host, self.port))
+        except ConnectionRefusedError:
+            print('Connection refused. Server must be down.')
+            self.parent.terminate()
+            sys.exit()
 
         sock.send(('/JOIN_ROOM').encode('utf-8'))
         sock.send((str(addr)))
@@ -39,7 +51,12 @@ class Sock:
     def send_room(self, addr, room):
         ''' send room data to server room '''
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect((self.host, self.port))
+        try:
+            sock.connect((self.host, self.port))
+        except ConnectionRefusedError:
+            print('Connection refused. Server must be down.')
+            self.parent.terminate()
+            sys.exit()
 
         sock.send(('/SEND_ROOM').encode('utf-8'))
         sock.send((str(addr)))
@@ -50,7 +67,12 @@ class Sock:
     def check_room(self, addr):
         ''' get room data '''
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect((self.host, self.port))
+        try:
+            sock.connect((self.host, self.port))
+        except ConnectionRefusedError:
+            print('Connection refused. Server must be down.')
+            self.parent.terminate()
+            sys.exit()
 
         sock.send(('/GET_ROOM').encode('utf-8'))
         sock.send((str(addr)))

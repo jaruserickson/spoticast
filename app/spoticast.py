@@ -16,7 +16,8 @@ class Spoticast:
     ''' main app '''
     def __init__(self):
         self.mac_scripts = MacScripts()
-        self.sockets = Sock(HOST, PORT)
+        self.parent = Process(target=self.watch_songs)
+        self.sockets = Sock(HOST, PORT, self.parent)
 
         self.type = None
         self.room_addr = None
@@ -27,8 +28,6 @@ class Spoticast:
             "play": False,
             "time": 0.0
         }
-
-        self.parent = Process(target=self.watch_songs)
 
         try:
             self.run()
@@ -102,7 +101,7 @@ class Spoticast:
 
     def watch_songs(self):
         ''' watch for song changes from the host '''
-        print('Monitoring Spotify...')
+        print('Casting Spotify ~)))')
         last_time = 0.0
         last_uri = ''
         last_state = True
@@ -120,6 +119,7 @@ class Spoticast:
                     "time": float(current_time)
                 }
                 if last_uri != uri:
+                    print('Now playing: ' + self.room_status.song)
                     self.send_room()
                 time.sleep(2) # faster checking for host
             elif self.type == 'USER':
@@ -128,6 +128,7 @@ class Spoticast:
                     if last_state != self.room_status.play:
                         self.mac_scripts.play_pause()
                     if last_uri != self.room_status.song_uri:
+                        print('Now playing: ' + self.room_status.song)
                         self.mac_scripts.listen_uri(self.room_status.song_uri)
                 time.sleep(10) # dont want to overload the server
             else:
