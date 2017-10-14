@@ -40,4 +40,6 @@ Now Playing: HUMBLE - Kendrick Lamar @ 1:23
 - Sockets
 - AWS EC2
 
-Note: this repo was made as a result of deprecating [spotiplay](https://github.com/jaruserickson/spotiplay)
+#### Note: 
+
+this repo was made as a result of deprecating and rewriting [spotiplay](https://github.com/jaruserickson/spotiplay)
