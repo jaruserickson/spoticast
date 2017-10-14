@@ -39,3 +39,5 @@ Now Playing: HUMBLE - Kendrick Lamar @ 1:23
 - Multiprocessing
 - Sockets
 - AWS EC2
+
+Note: this repo was made as a result of deprecating [spotiplay](https://github.com/jaruserickson/spotiplay)
