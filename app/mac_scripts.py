@@ -1,8 +1,10 @@
+''' applescript file '''
 from __future__ import absolute_import, unicode_literals
 import sys
 import subprocess
 
 class MacScripts:
+    ''' applescript init '''
     def __init__(self):
         '''
             Check if there is a Spotify process running and if not,
@@ -10,33 +12,35 @@ class MacScripts:
         '''
         try:
             count = int(subprocess.check_output([
-                    'osascript',
-                    '-e', 'tell application "System Events"',
-                    '-e', 'count (every process whose name is "Spotify")',
-                    '-e', 'end tell'
+                'osascript',
+                '-e', 'tell application "System Events"',
+                '-e', 'count (every process whose name is "Spotify")',
+                '-e', 'end tell'
                 ]).strip())
             if count == 0:
                 print('\n[OPENING SPOTIFY] The Spotify app was not open.\n')
 
-                self.applescript(
+                applescript(
                     'tell application "Spotify" to activate'
                 )
         except Exception:
             sys.exit('You don\'t have Spotify installed. Please install it.')
 
-    def applescript(self, command):
-        ''' makes applescript call '''
-        subprocess.call([
-            'osascript',
-            '-e',
-            command
-        ])
-
     def listen_uri(self, uri):
         ''' tells the spotify app to listen to a song '''
-        self.applescript(
-            'tell app "Spotify" to play track "%s"' % uri
-        )
+        applescript('tell app "Spotify" to play track "%s"' % uri)
+
+    def set_time(self, time):
+        applescript('tell app "Spotify" to set player position to %s' % time)
+
+    def play(self):
+        applescript('tell app "Spotify" to play')
+
+    def pause(self):
+        applescript('tell app "Spotify" to pause')
+
+    def play_pause(self):
+        applescript('tell app "Spotify" to playpause')
 
     def get_song_url(self):
         out, err = subprocess.Popen(['osascript', '-e', (
@@ -66,3 +70,11 @@ class MacScripts:
 
         out, err = proc.communicate()
         return out.decode(sys.getfilesystemencoding()).rstrip()
+
+def applescript(command):
+    ''' makes applescript call '''
+    subprocess.call([
+        'osascript',
+        '-e',
+        command
+    ])

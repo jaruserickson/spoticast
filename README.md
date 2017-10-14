@@ -18,19 +18,18 @@ $ sudo python setup.py install
 #### Hosting:
 ```bash
 $ spoticast -i
-Created room barnacle-hunter.
 Ctrl C to close room.
+Created room barnacle-hunter.
+Now Broadcasting: HUMBLE - Kendrick Lamar @ 1:23
 ```
 You can then simply play songs from the spotify app, and spoticast will broadcast it to your friends :). 
 
 #### Joining friends:
 ```bash
 $ spoticast -j barnacle-hunter
+Ctrl+C to close room.
 Joined room barnacle-hunter.
 Now Playing: HUMBLE - Kendrick Lamar @ 1:23
-$ spoticast -q
-Left room barnacle-hunter.
-Bye!
 ```
 
 ### Tech

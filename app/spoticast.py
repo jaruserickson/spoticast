@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 ''' main cli for spotipy rooms '''
 from __future__ import absolute_import, unicode_literals
-import sys
 import time
 import argparse
 from multiprocessing import Process
@@ -18,7 +17,16 @@ class Spoticast:
     def __init__(self):
         self.mac_scripts = MacScripts()
         self.sockets = Sock(HOST, PORT)
+
+        self.type = None
         self.room_addr = None
+
+        self.room_status = {
+            "song": "",
+            "song_url": "",
+            "play": False,
+            "time": 0.0
+        }
 
         self.parent = Process(target=self.watch_songs)
 
@@ -40,69 +48,94 @@ class Spoticast:
             action='store_true', dest="init"
         )
         parser.add_argument(
-            '-q', '--quit', '-l', '--leave', help='leave room', 
-            action='store_true', dest="leave"
-        )
-        parser.add_argument(
-            '-r', '--room', help='prints the room info', action='store_true',
-            dest="room"
-        )
-        parser.add_argument(
-            '-c', '--current', help='current playing', action='store_true',
-            dest="current"
+            '-j', '--join', help='join room [ADDR]', type=str, dest="join"
         )
 
         args = parser.parse_args()
-
         if args.init:
             self.host_room()
-        elif args.leave:
-            self.leave_room()
-        elif args.room:
-            print(self.room_addr if self.room_addr else 'No current room!')
-        elif args.current:
-            print(self.mac_scripts.get_current_playing())
+        elif args.join:
+            self.join_room(args.join)
 
     def host_room(self):
         ''' host a room '''
         print('Sending host request...')
         self.parent.start() # run in background
-        room_addr = self.sockets.create_room()
-        print('Joined room: %s' % room_addr)
-        print('Ctrl C to close room.')
-        self.room_addr = room_addr
+        self.room_addr = self.sockets.create_room()
 
-    def leave_room(self):
-        ''' leave a room '''
-        if self.room_addr:
-            print('Sending leave request...')
-            ret = self.sockets.leave_room(self.room_addr.get_addr())
-            if ret[0] != '@':
-                self.room_addr = None
-                print(ret)
-                self.parent.terminate()
-                sys.exit()
-        else:
-            print("You're not in a room!")
+        self.mac_scripts.play()
+        artist, song, current_time = self.mac_scripts.get_current_playing().split(" - ")
+        uri = self.mac_scripts.get_song_url()
+
+        self.room_status = {
+            "song": artist + " - " + song,
+            "song_url": uri,
+            "play": True,
+            "time": float(current_time)
+        }
+
+        self.sockets.send_room(self.room_addr, self.room_status)
+        self.type = 'HOST'
+
+        print('Joined room: %s' % self.room_addr)
+        print('Ctrl C to close room.')
 
     def join_room(self, addr):
         ''' joins a room of room address addr '''
         print('Sending join request...')
-        room_data = self.sockets.join_room(addr)
-        if room_data != {}:
+        self.room_status = self.sockets.join_room(addr)
+        if self.room_status != {}:
             self.room_addr = addr
-            # setup room data
+            self.type = 'USER'
+            self.mac_scripts.listen_uri(self.room_status.song_uri)
+            self.mac_scripts.set_time(self.room_status.time)
         else:
             print('Problem joining room.')
 
+    def send_room(self):
+        ''' sends room info for hosts '''
+        self.sockets.send_room(self.room_addr, self.room_status) # status
+
+    def check_room(self):
+        ''' checks room info for users '''
+        return self.sockets.check_room(self.room_addr) # {} or data
+
     def watch_songs(self):
-        ''' watch for unauthorized + authorized song changes'''
+        ''' watch for song changes from the host '''
         print('Monitoring Spotify...')
+        last_time = 0.0
+        last_uri = ''
+        last_state = True
 
         while 1:
-            time.sleep(2) #check every two seconds
-            self.mac_scripts.get_current_playing()
-            self.mac_scripts.get_song_url()
+            # current spotify status
+            artist, song, current_time = self.mac_scripts.get_current_playing().split(" - ")
+            uri = self.mac_scripts.get_song_url()
+
+            if self.type == 'HOST':
+                self.room_status = {
+                    "song": artist + " - " + song,
+                    "song_url": uri,
+                    "play": current_time > last_time,
+                    "time": float(current_time)
+                }
+                if last_uri != uri:
+                    self.send_room()
+                time.sleep(2) # faster checking for host
+            elif self.type == 'USER':
+                self.room_status = self.check_room()
+                if self.room_status != {}:
+                    if last_state != self.room_status.play:
+                        self.mac_scripts.play_pause()
+                    if last_uri != self.room_status.song_uri:
+                        self.mac_scripts.listen_uri(self.room_status.song_uri)
+                time.sleep(10) # dont want to overload the server
+            else:
+                time.sleep(2)
+
+            last_state = current_time > last_time
+            last_uri, last_time = uri, float(current_time)
+
 
 def main():
     ''' main '''
