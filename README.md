@@ -1,8 +1,8 @@
 <p align="center">
-<img src='SPOTIPLAY.png' height='200'>
+<img src='spoticast.png' height='200'>
 </p>
 
-Ever wanted to be your own DJ for your friends? spoticast is here for ya!
+Ever wanted to be your own DJ for your friends? spoticast is here for just that!
 
 ### Installation
 
