@@ -1,5 +1,5 @@
 <p align="center">
-<img src='spoticast.png' height='200'>
+<a href="#"><img src='spoticast.png' height='200'></a>
 </p>
 
 Ever wanted to be your own DJ for your friends? spoticast is here for just that!
